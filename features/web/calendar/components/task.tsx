@@ -1,5 +1,5 @@
 import Image from "next/image";
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, ChangeEvent,useRef,} from "react";
 
 interface TaskProps {
     selectedDate: Date | null;
@@ -30,7 +30,8 @@ export default function Task({ selectedDate, onClose }: TaskProps) {
         notification: "",
         description: "",
     });
-
+   
+    
     const handleChange = (
         e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
@@ -41,13 +42,52 @@ export default function Task({ selectedDate, onClose }: TaskProps) {
                 : value;
         setTaskData((prev) => ({ ...prev, [name]: newValue }));
     };
-
-    const handleSave = () => {
-        // Aqui você implementaria a lógica para salvar a tarefa
+     const handleSave = () => {
         console.log("Tarefa salva:", taskData, selectedDate);
-        onClose(); // Fecha o pop-up após salvar
+        onClose();
     };
 
+
+
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+       const applyBold = () => {
+        if (!textareaRef.current) return;
+        
+        const textarea = textareaRef.current;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = taskData.description;
+        const selectedText = text.substring(start, end);
+        
+        let newText;
+        let newCursorPos;
+        
+        if (selectedText) {
+            // Texto selecionado: envolve com **
+            newText = text.substring(0, start) + 
+                      `**${selectedText}**` + 
+                      text.substring(end);
+            newCursorPos = end + 4; // 4 caracteres adicionados (** **)
+        } else {
+            // Sem texto selecionado: insere **texto** com cursor no meio
+            newText = text.substring(0, start) + 
+                      "****" + 
+                      text.substring(end);
+            newCursorPos = start + 2; // Posiciona entre os asteriscos
+        }
+
+        setTaskData(prev => ({ ...prev, description: newText }));
+        
+        // Atualiza posição do cursor após renderização
+        setTimeout(() => {
+            if (textareaRef.current) {
+                textareaRef.current.selectionStart = newCursorPos;
+                textareaRef.current.selectionEnd = newCursorPos;
+                textareaRef.current.focus();
+            }
+        }, 0);
+    };
+  
     // Não renderiza nada se nenhuma data estiver selecionada
     if (!selectedDate) {
         return null;
@@ -97,7 +137,7 @@ export default function Task({ selectedDate, onClose }: TaskProps) {
                             alt="logo"
                             width={20}
                             height={20}
-                            className=" "
+                           
                         />
 
                         <input
@@ -111,11 +151,26 @@ export default function Task({ selectedDate, onClose }: TaskProps) {
                     </div>
 
                     <div className="flex flex-wrap gap-4 items-center ">
-                        <select id="prioridade " className="">
-                            <option value="baixa">Prioridade Baixa</option>
-                            <option value="normal">Prioridade Normal</option>
-                            <option value="alta">Prioridade Alta</option>
+                       <Image
+                            src={"/svg/prioridade.svg"}
+                            alt="logo"
+                            width={20}
+                            height={20}
+                            
+                        />
+
+                        <select id="prioridade " className="  focus:outline-none  text-gray-400 ">
+                            <option className="bg-yellow-200 " value="baixa">Prioridade Baixa</option>
+                            <option  className="bg-blue-200"value="normal">Prioridade Normal</option>
+                            <option  className="bg-red-200"value="alta">Prioridade Alta</option>
                         </select>
+                          <Image
+                            src={"/svg/materia.svg"}
+                            alt="logo"
+                            width={20}
+                            height={20}
+                            
+                        />
 
                         <input
                             type="text"
@@ -128,19 +183,34 @@ export default function Task({ selectedDate, onClose }: TaskProps) {
                     </div>
                 </div>
 
+                 {/* Botões de formatação e textarea */}
                 <div className="mt-6">
+                    {/* Botões separados (alteração solicitada) */}
                     <div className="flex space-x-2 mb-2">
-                        {["B", "I", "U"].map((btn, i) => (
-                            <button
-                                key={i}
-                                className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100"
-                            >
-                                {btn}
-                            </button>
-                        ))}
-                    </div>
-
+                        {/* Botão Negrito */}
+                        <button
+                            onClick={applyBold} // Função de negrito
+                            className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100 font-bold"
+                        >
+                            B
+                        </button>
+                        
+                        {/* Botão Itálico */}
+                        <button
+                            className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100 italic"
+                        >
+                            I
+                        </button>
+                        
+                        {/* Botão Sublinhado */}
+                        <button
+                            className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100 underline"
+                        >
+                            U
+                        </button>
+                    
                     <textarea
+                        ref={textareaRef}
                         name="description"
                         placeholder="Adicionar uma descrição"
                         value={taskData.description}
@@ -158,6 +228,7 @@ export default function Task({ selectedDate, onClose }: TaskProps) {
                     </button>
                 </div>
             </div>
+        </div>
         </div>
     );
 }
