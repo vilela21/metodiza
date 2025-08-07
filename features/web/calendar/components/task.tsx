@@ -1,5 +1,5 @@
 import Image from "next/image";
-import React, { useState, ChangeEvent,useRef,} from "react";
+import React, { useState, ChangeEvent,useRef,useEffect} from "react";
 
 interface TaskProps {
     selectedDate: Date | null;
@@ -31,7 +31,9 @@ export default function Task({ selectedDate, onClose }: TaskProps) {
         description: "",
     });
    
-    
+     const editorRef = useRef<HTMLDivElement>(null);
+    const [isEditorFocused, setIsEditorFocused] = useState(false);
+
     const handleChange = (
         e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
@@ -49,44 +51,45 @@ export default function Task({ selectedDate, onClose }: TaskProps) {
 
 
 
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-       const applyBold = () => {
-        if (!textareaRef.current) return;
-        
-        const textarea = textareaRef.current;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const text = taskData.description;
-        const selectedText = text.substring(start, end);
-        
-        let newText;
-        let newCursorPos;
-        
-        if (selectedText) {
-            // Texto selecionado: envolve com **
-            newText = text.substring(0, start) + 
-                      `**${selectedText}**` + 
-                      text.substring(end);
-            newCursorPos = end + 4; // 4 caracteres adicionados (** **)
-        } else {
-            // Sem texto selecionado: insere **texto** com cursor no meio
-            newText = text.substring(0, start) + 
-                      "****" + 
-                      text.substring(end);
-            newCursorPos = start + 2; // Posiciona entre os asteriscos
-        }
+    // Função para aplicar formatação em negrito
+        const applyBold = () => {
+    document.execCommand("bold", false);
+    // Atualiza o estado com o conteúdo formatado
+    if (editorRef.current) {
+      setTaskData(prev => ({
+        ...prev,
+        description: editorRef.current!.innerHTML
+      }));
+    }
+  };
 
-        setTaskData(prev => ({ ...prev, description: newText }));
-        
-        // Atualiza posição do cursor após renderização
-        setTimeout(() => {
-            if (textareaRef.current) {
-                textareaRef.current.selectionStart = newCursorPos;
-                textareaRef.current.selectionEnd = newCursorPos;
-                textareaRef.current.focus();
-            }
-        }, 0);
-    };
+  // Função para aplicar itálico
+  const applyItalic = () => {
+    document.execCommand("italic", false);
+    if (editorRef.current) {
+      setTaskData(prev => ({
+        ...prev,
+        description: editorRef.current!.innerHTML
+      }));
+    }
+  };
+
+  // Função para aplicar sublinhado
+  const applyUnderline = () => {
+    document.execCommand("underline", false);
+    if (editorRef.current) {
+      setTaskData(prev => ({
+        ...prev,
+        description: editorRef.current!.innerHTML
+      }));
+    }
+  };
+      useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.innerHTML = taskData.description;
+    }
+  }, [taskData.description]);
+
   
     // Não renderiza nada se nenhuma data estiver selecionada
     if (!selectedDate) {
@@ -99,7 +102,7 @@ export default function Task({ selectedDate, onClose }: TaskProps) {
     return (
         <div
             className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50"
-            // Fecha ao clicar fora do pop-up
+          
         >
             <div
                 className="bg-[#464757] rounded-lg shadow-xl w-full max-w-xl p-6 "
@@ -185,39 +188,51 @@ export default function Task({ selectedDate, onClose }: TaskProps) {
 
                  {/* Botões de formatação e textarea */}
                 <div className="mt-6">
-                    {/* Botões separados (alteração solicitada) */}
-                    <div className="flex space-x-2 mb-2">
-                        {/* Botão Negrito */}
-                        <button
-                            onClick={applyBold} // Função de negrito
-                            className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100 font-bold"
-                        >
-                            B
-                        </button>
-                        
-                        {/* Botão Itálico */}
-                        <button
-                            className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100 italic"
-                        >
-                            I
-                        </button>
-                        
-                        {/* Botão Sublinhado */}
-                        <button
-                            className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100 underline"
-                        >
-                            U
-                        </button>
-                    
-                    <textarea
-                        ref={textareaRef}
-                        name="description"
-                        placeholder="Adicionar uma descrição"
-                        value={taskData.description}
-                        onChange={handleChange}
-                        className="w-full h-32 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                    />
+             <div className="flex space-x-2 mb-2">
+                    <button
+                onClick={applyBold}
+                className="w-8 h-8 flex items-center justify-center border border-gray-600 rounded hover:bg-gray-600 font-bold text-white"
+                title="Negrito"
+                >
+                B
+                </button>
+                <button
+                onClick={applyItalic}
+                className="w-8 h-8 flex items-center justify-center border border-gray-600 rounded hover:bg-gray-600 italic text-white"
+                title="Itálico"
+                    >
+                    I
+                    </button>
+                    <button
+                    onClick={applyUnderline}
+                    className="w-8 h-8 flex items-center justify-center border border-gray-600 rounded hover:bg-gray-600 underline text-white"
+                    title="Sublinhado"
+                    >
+                    U
+                    </button>
                 </div>
+                    
+                     <div
+            ref={editorRef}
+            contentEditable
+            className={`w-full min-h-32 p-3 border ${isEditorFocused ? 'border-cyan-500' : 'border-gray-600'} rounded bg-[#3a3b4a] text-white focus:outline-none`}
+            onFocus={() => setIsEditorFocused(true)}
+            onBlur={() => setIsEditorFocused(false)}
+            onInput={(e) => {
+              setTaskData(prev => ({
+                ...prev,
+                description: (e.target as HTMLDivElement).innerHTML
+              }));
+            }}
+          />
+          
+          {/* Placeholder para o editor */}
+          {!taskData.description && !isEditorFocused && (
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+              Adicionar uma descrição
+            </div>
+          )}
+        </div>
 
                 <div className="mt-6 flex justify-end">
                     <button
@@ -229,6 +244,6 @@ export default function Task({ selectedDate, onClose }: TaskProps) {
                 </div>
             </div>
         </div>
-        </div>
+    
     );
 }
