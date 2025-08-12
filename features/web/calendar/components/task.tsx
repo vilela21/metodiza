@@ -90,32 +90,17 @@ export default function Task({ selectedDate, onClose, onSave, existingTask }: Ta
     // Formatação texto (bold, italic, underline)
     const applyBold = () => {
         document.execCommand("bold", false);
-        if (editorRef.current) {
-            setTaskData(prev => ({
-                ...prev,
-                description: editorRef.current!.innerHTML,
-            }));
-        }
+        
     };
 
     const applyItalic = () => {
         document.execCommand("italic", false);
-        if (editorRef.current) {
-            setTaskData(prev => ({
-                ...prev,
-                description: editorRef.current!.innerHTML,
-            }));
-        }
+        
     };
 
     const applyUnderline = () => {
         document.execCommand("underline", false);
-        if (editorRef.current) {
-            setTaskData(prev => ({
-                ...prev,
-                description: editorRef.current!.innerHTML,
-            }));
-        }
+      
     };
 
     // Não renderiza se não tem data selecionada
@@ -127,8 +112,7 @@ export default function Task({ selectedDate, onClose, onSave, existingTask }: Ta
 
     return (
         <div
-            className="fixed inset-0 bg-opacity-50 bg-black flex items-center justify-center z-50"
-            onClick={onClose}
+            className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50"
         >
             <div
                 className="bg-[#464757] rounded-lg shadow-xl w-full max-w-xl p-6"
@@ -264,18 +248,12 @@ export default function Task({ selectedDate, onClose, onSave, existingTask }: Ta
                             } rounded bg-[#3a3b4a] text-white focus:outline-none`}
                             onFocus={() => setIsEditorFocused(true)}
                             onBlur={() => setIsEditorFocused(false)}
-                            onInput={(e) =>
-                                setTaskData((prev) => ({
-                                    ...prev,
-                                    description: (e.target as HTMLDivElement)
-                                        .innerHTML,
-                                }))
-                            }
+                          
                             spellCheck={true}
                         />
                         {!taskData.description && !isEditorFocused && (
                             <div className="absolute top-3 left-3 text-gray-500 pointer-events-none select-none">
-                                Adicionar descrição
+                                
                             </div>
                         )}
                     </div>
